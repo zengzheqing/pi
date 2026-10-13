@@ -321,6 +321,12 @@ export interface ProviderStreams {
 		options?: DeferredFetchOptions,
 	): AssistantMessageEventStream;
 	cancelDeferred?(model: Model<Api>, handle: DeferredHandle, options?: DeferredCancelOptions): Promise<void>;
+	/**
+	 * Force the implementation module to load. Lazy wrappers (`lazyApi()`) load their dynamic
+	 * import eagerly so first use cannot fail with `Cannot find module` after the install was
+	 * updated or removed on disk; concrete implementations are already loaded and omit this.
+	 */
+	preload?(): Promise<void>;
 }
 
 /**

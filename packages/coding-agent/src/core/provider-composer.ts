@@ -602,6 +602,15 @@ export function composeModelProvider(
 				: api.stream(model, context, options);
 		});
 
+	const preloadApi = async (model: Model<Api>): Promise<void> => {
+		if (extension?.streamSimple && model.api === extension.api) return;
+		if (base && supportsBaseApi(model)) {
+			await base.preload?.(model);
+			return;
+		}
+		await getApiProvider(model.api)?.preload?.();
+	};
+
 	const provider: Provider = {
 		id: providerId,
 		name: extension?.name ?? config?.name ?? base?.name ?? extension?.oauth?.name ?? providerId,
@@ -641,6 +650,7 @@ export function composeModelProvider(
 			: undefined,
 		stream: (model, context, options) => streamWith(model, context, options, false),
 		streamSimple: (model, context, options) => streamWith(model, context, options, true),
+		preload: (model) => preloadApi(model),
 	};
 
 	const fetchDeferred = base?.fetchDeferred;

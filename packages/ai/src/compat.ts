@@ -86,12 +86,15 @@ export interface ApiProvider<TApi extends Api = Api, TOptions extends StreamOpti
 	api: TApi;
 	stream: StreamFunction<TApi, TOptions>;
 	streamSimple: StreamFunction<TApi, SimpleStreamOptions>;
+	/** @see ProviderStreams.preload */
+	preload?(): Promise<void>;
 }
 
 interface ApiProviderInternal {
 	api: Api;
 	stream: ApiStreamFunction;
 	streamSimple: ApiStreamSimpleFunction;
+	preload?: () => Promise<void>;
 }
 
 type RegisteredApiProvider = {
@@ -134,6 +137,7 @@ export function registerApiProvider<TApi extends Api, TOptions extends StreamOpt
 			api: provider.api,
 			stream: wrapStream(provider.api, provider.stream),
 			streamSimple: wrapStreamSimple(provider.api, provider.streamSimple),
+			preload: provider.preload,
 		},
 		sourceId,
 	});
@@ -200,7 +204,12 @@ const builtinApiProviderInstances = new Map<Api, ReturnType<typeof getApiProvide
 export function registerBuiltInApiProviders(): void {
 	for (const [api, streams] of BUILTIN_APIS) {
 		if (!getApiProvider(api)) {
-			registerApiProvider({ api, stream: streams.stream, streamSimple: streams.streamSimple });
+			registerApiProvider({
+				api,
+				stream: streams.stream,
+				streamSimple: streams.streamSimple,
+				preload: streams.preload,
+			});
 		}
 		builtinApiProviderInstances.set(api, getApiProvider(api));
 	}

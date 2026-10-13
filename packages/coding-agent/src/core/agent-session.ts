@@ -2485,6 +2485,13 @@ export class AgentSession {
 		source: "set" | "cycle" | "restore",
 	): Promise<void> {
 		if (modelsAreEqual(previousModel, nextModel)) return;
+		// Load the new model's API implementation before it is first streamed, so a session that
+		// outlives its install keeps working after `pi update` prunes the release it started from
+		// (#10864). Preload failures are ignored: the stream call reports them as a model error.
+		void this._modelRuntime
+			.getProvider(nextModel.provider)
+			?.preload?.(nextModel)
+			.catch(() => {});
 		await this._extensionRunner.emit({
 			type: "model_select",
 			model: nextModel,

@@ -227,6 +227,12 @@ export interface Provider<TApi extends Api = Api> {
 		options?: DeferredFetchOptions,
 	): AssistantMessageEventStream;
 	cancelDeferred?(model: Model<TApi>, handle: DeferredHandle, options?: DeferredCancelOptions): Promise<void>;
+	/**
+	 * Force lazy API implementations for this model's api to load, so a running session keeps
+	 * streaming after the install it started from is updated or removed on disk. Providers with
+	 * concrete implementations omit this or resolve immediately.
+	 */
+	preload?(model: Model<Api>): Promise<void>;
 
 	/** Present when the provider supports dedicated image models. Never rejects. */
 	generateImages?(
@@ -1129,6 +1135,7 @@ export function createProvider<TApi extends Api = Api>(input: CreateProviderOpti
 		stream: (model, context, options) => dispatch(model, (streams) => streams.stream(model, context, options)),
 		streamSimple: (model, context, options) =>
 			dispatch(model, (streams) => streams.streamSimple(model, context, options)),
+		preload: (model) => apiFor(model)?.preload?.() ?? Promise.resolve(),
 	};
 
 	if (streams.some((entry) => entry.fetchDeferred !== undefined)) {

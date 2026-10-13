@@ -77,6 +77,7 @@ export function lazyApi(load: () => Promise<ProviderStreams>, capabilities?: Laz
 			lazyStream(model, async () => (await load()).stream(model, context, options)),
 		streamSimple: (model, context, options) =>
 			lazyStream(model, async () => (await load()).streamSimple(model, context, options)),
+		preload: () => load().then(() => undefined),
 	};
 
 	if (capabilities?.fetchDeferred) {
